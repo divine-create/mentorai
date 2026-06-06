@@ -1,0 +1,19 @@
+# Keep the Docker build context lean and free of secrets.
+# Both backend/Dockerfile and frontend/Dockerfile build from the repo root.
+**/node_modules
+**/dist
+**/.next
+**/.env
+**/.env.*
+*.log
+
+# Secrets — never copy GCP service-account keys into an image
+ai-academy-*.json
+*-service-account*.json
+gcloud-key*.json
+
+# VCS / local
+.git
+.gitignore
+.claude
+docker-compose.yml

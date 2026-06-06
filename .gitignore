@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.local
+dist/
+.next/
+*.log
+
+# Google Cloud service-account keys — secret, never commit
+ai-academy-*.json
+*-service-account*.json
+gcloud-key*.json

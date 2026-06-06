@@ -1,0 +1,38 @@
+# Local infrastructure for The AI Academy.
+#
+# These services are already running on this host (via the shared
+# `cityconnect-*` compose project) and exposed on localhost. This file
+# exists so a fresh clone can stand them up with `docker compose up -d`.
+# If you already have a local Postgres + Redis, you can ignore this file
+# and just point backend/.env at them.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mentorai-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mentorai
+    ports:
+      - "5432:5432"
+    volumes:
+      - mentorai_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mentorai"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: mentorai-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  mentorai_pg_data:

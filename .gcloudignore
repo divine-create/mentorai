@@ -1,0 +1,16 @@
+# Files NOT uploaded to Cloud Build (mirrors .dockerignore; keeps uploads small
+# and ensures secrets never reach the build).
+.git
+.gitignore
+.claude
+**/node_modules
+**/dist
+**/.next
+**/.env
+**/.env.*
+*.log
+
+# Secrets
+ai-academy-*.json
+*-service-account*.json
+gcloud-key*.json
