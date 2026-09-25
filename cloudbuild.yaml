@@ -54,7 +54,8 @@ steps:
   - id: migrate
     name: ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/backend:$SHORT_SHA
     entrypoint: node
-    args: ["dist/db/migrate.js"]
+    # Absolute path: Cloud Build overrides the image's WORKDIR with /workspace.
+    args: ["/app/backend/dist/db/migrate.js"]
     secretEnv: ["DATABASE_URL"]
     env:
       - NODE_ENV=production
@@ -75,7 +76,7 @@ steps:
       - --port=8080
       - --min-instances=1
       - --timeout=3600
-      - --set-secrets=DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_SERVICE_ROLE_KEY=SUPABASE_SERVICE_ROLE_KEY:latest
+      - --set-secrets=DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_SERVICE_ROLE_KEY=SUPABASE_SERVICE_ROLE_KEY:latest,DEEPSEEK_API_KEY=DEEPSEEK_API_KEY:latest
       - --set-env-vars=^##^NODE_ENV=production##GOOGLE_CLOUD_PROJECT=$PROJECT_ID##GOOGLE_CLOUD_LOCATION=${_REGION}##FRONTEND_URL=${_FRONTEND_URL}##ADMIN_EMAILS=${_ADMIN_EMAILS}##EMAIL_FROM=${_EMAIL_FROM}##POSTHOG_HOST=${_POSTHOG_HOST}
 
   # 4) Build + push frontend image (NEXT_PUBLIC_* baked from substitutions)

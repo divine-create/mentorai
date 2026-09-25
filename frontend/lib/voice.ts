@@ -40,7 +40,7 @@ export function extractNewSentences(
 
 // ─── TTS playback queue ────────────────────────────────────────────────────────
 export class TTSPlayer {
-  private queue: string[] = [];
+  private queue: Promise<string | null>[] = [];
   private playing = false;
   private audio: HTMLAudioElement | null = null;
   private enabled = false;
@@ -59,7 +59,25 @@ export class TTSPlayer {
     if (!this.enabled) return;
     const s = sentence.trim();
     if (!s) return;
-    this.queue.push(s);
+    
+    // Start fetching audio immediately, don't wait for playback
+    const fetchAudio = async () => {
+      try {
+        const token = await this.getToken();
+        const res = await fetch(`${this.apiUrl}/api/voice/tts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ text: s }),
+        });
+        if (!res.ok) return null;
+        const blob = await res.blob();
+        return URL.createObjectURL(blob);
+      } catch {
+        return null;
+      }
+    };
+    
+    this.queue.push(fetchAudio());
     if (!this.playing) void this.playNext();
   }
 
@@ -78,31 +96,24 @@ export class TTSPlayer {
       return;
     }
     this.playing = true;
-    const text = this.queue.shift()!;
-    try {
-      const token = await this.getToken();
-      const res = await fetch(`${this.apiUrl}/api/voice/tts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok || !this.enabled) {
-        return void this.playNext();
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = new Audio(url);
-      this.audio = a;
-      const cont = () => {
-        URL.revokeObjectURL(url);
-        void this.playNext();
-      };
-      a.onended = cont;
-      a.onerror = cont;
-      await a.play().catch(cont);
-    } catch {
-      void this.playNext();
+    
+    const urlPromise = this.queue.shift()!;
+    const url = await urlPromise;
+    
+    if (!url || !this.enabled) {
+      return void this.playNext();
     }
+    
+    const a = new Audio(url);
+    a.playbackRate = 1.25; // Speed up the voice reading
+    this.audio = a;
+    const cont = () => {
+      URL.revokeObjectURL(url);
+      void this.playNext();
+    };
+    a.onended = cont;
+    a.onerror = cont;
+    await a.play().catch(cont);
   }
 }
 
