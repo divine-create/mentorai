@@ -29,8 +29,12 @@ export async function POST(request: Request) {
 
     const adaptationHint = await recordUserMessage(sessionId, message);
     let fullUserMessage = message;
-    if (codeContext) fullUserMessage += `\n\n[Learner's current code]:\n\`\`\`python\n${codeContext}\n\`\`\``;
-    if (adaptationHint) fullUserMessage += `\n\n${adaptationHint}`;
+    if (codeContext) {
+      fullUserMessage += '\n\n[Learner\'s current code]:\n```python\n' + codeContext + '\n```';
+    }
+    if (adaptationHint) {
+      fullUserMessage += '\n\n' + adaptationHint;
+    }
 
     await db.query(
       `INSERT INTO messages (session_id, role, content) VALUES ($1, 'user', $2)`,
@@ -42,7 +46,7 @@ export async function POST(request: Request) {
       [sessionId]
     );
 
-    const modelId = 'claude-sonnet'; // Default for now
+    const modelId = 'claude-sonnet';
 
     const recentHistory = await manageContext(sessionId, historyResult.rows, modelId);
     const systemPrompt = await buildSystemPrompt(userAuth.id, sessionId, historyResult.rows.length <= 1, fullUserMessage);

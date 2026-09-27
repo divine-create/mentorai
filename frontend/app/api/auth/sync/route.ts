@@ -13,42 +13,42 @@ export async function POST(request: Request) {
     }
 
     const result = await db.query(
-      \INSERT INTO users (id, email, name, goal, experience)
-       VALUES (\, \, \, \, \)
+      `INSERT INTO users (id, email, name, goal, experience)
+       VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (id) DO UPDATE SET
          name = COALESCE(EXCLUDED.name, users.name),
          goal = COALESCE(EXCLUDED.goal, users.goal),
          experience = COALESCE(EXCLUDED.experience, users.experience),
          updated_at = NOW()
-       RETURNING id, subscription_status, goal\,
+       RETURNING id, subscription_status, goal`,
       [userAuth.id, email, name ?? null, goal ?? null, experience ?? null]
     );
 
     const user = result.rows[0];
 
     const defaultSubject = await db.query(
-      \SELECT id FROM subjects
+      `SELECT id FROM subjects
        WHERE is_available = true
        ORDER BY (slug = 'python-native') DESC, order_index ASC
-       LIMIT 1\
+       LIMIT 1`
     );
     const defaultSubjectId = defaultSubject.rows[0]?.id ?? null;
 
     await db.query(
-      \INSERT INTO learner_profiles (user_id, current_module_id, active_subject_id)
-       VALUES (\, \, \)
+      `INSERT INTO learner_profiles (user_id, current_module_id, active_subject_id)
+       VALUES ($1, $2, $3)
        ON CONFLICT (user_id) DO UPDATE SET
-         current_module_id = COALESCE(\, learner_profiles.current_module_id),
-         active_subject_id = COALESCE(learner_profiles.active_subject_id, \)\,
+         current_module_id = COALESCE($2, learner_profiles.current_module_id),
+         active_subject_id = COALESCE(learner_profiles.active_subject_id, $3)`,
       [userAuth.id, startingModule ?? null, defaultSubjectId]
     );
 
     const modulesToUnlock = Array.from(new Set([1, startingModule ?? 1]));
     for (const modId of modulesToUnlock) {
       await db.query(
-        \INSERT INTO module_mastery (user_id, module_id, unlocked)
-         VALUES (\, \, true)
-         ON CONFLICT (user_id, module_id) DO UPDATE SET unlocked = true\,
+        `INSERT INTO module_mastery (user_id, module_id, unlocked)
+         VALUES ($1, $2, true)
+         ON CONFLICT (user_id, module_id) DO UPDATE SET unlocked = true`,
         [userAuth.id, modId]
       );
     }
