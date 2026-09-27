@@ -7,8 +7,8 @@ export async function GET() {
     const userAuth = await requireAuth();
 
     const profileResult = await db.query(
-      \SELECT current_module_id, overall_mastery, streak_days, last_session_at, active_subject_id
-       FROM learner_profiles WHERE user_id = \\,
+      `SELECT current_module_id, overall_mastery, streak_days, last_session_at, active_subject_id
+       FROM learner_profiles WHERE user_id = $1`,
       [userAuth.id]
     );
 
@@ -24,15 +24,15 @@ export async function GET() {
     }
 
     const subjectResult = await db.query(
-      \SELECT id, name, slug, description, icon, order_index, practice_kind, mastery_weights
-       FROM subjects WHERE id = \\,
+      `SELECT id, name, slug, description, icon, order_index, practice_kind, mastery_weights
+       FROM subjects WHERE id = $1`,
       [activeSubjectId]
     );
 
     const subject = subjectResult.rows[0] ?? null;
 
     const result = await db.query(
-      \SELECT
+      `SELECT
          m.id, m.slug, m.title, m.description, m.order_index,
          m.estimated_hours_min, m.estimated_hours_max,
          COALESCE(mm.mastery_score, 0)  AS mastery_score,
@@ -41,9 +41,9 @@ export async function GET() {
          mm.last_assessed_at
        FROM modules m
        LEFT JOIN module_mastery mm
-         ON mm.module_id = m.id AND mm.user_id = \
-       WHERE m.subject_id = \ AND m.published = true
-       ORDER BY m.order_index\,
+         ON mm.module_id = m.id AND mm.user_id = $1
+       WHERE m.subject_id = $2 AND m.published = true
+       ORDER BY m.order_index`,
       [userAuth.id, activeSubjectId]
     );
 

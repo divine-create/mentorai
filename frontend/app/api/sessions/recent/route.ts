@@ -7,11 +7,11 @@ export async function GET() {
     const userAuth = await requireAuth();
 
     const result = await db.query(
-      \SELECT s.id, s.summary_text, s.started_at, s.ended_at, m.title AS module_title
+      `SELECT s.id, s.summary_text, s.started_at, s.ended_at, m.title AS module_title
        FROM sessions s
        LEFT JOIN modules m ON m.id = s.module_id
-       WHERE s.user_id = \ AND s.ended_at IS NOT NULL
-       ORDER BY s.ended_at DESC LIMIT 1\,
+       WHERE s.user_id = $1 AND s.ended_at IS NOT NULL
+       ORDER BY s.ended_at DESC LIMIT 1`,
       [userAuth.id]
     );
 
