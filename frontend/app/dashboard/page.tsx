@@ -260,7 +260,7 @@ export default function DashboardPage() {
 
         {/* My courses */}
         {enrolled.length > 0 && (
-          <section className="space-y-3">
+          <section id="my-courses" className="space-y-3">
             <h3 className="font-semibold text-gray-800">My courses</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {enrolled.map((s) => (
@@ -277,7 +277,7 @@ export default function DashboardPage() {
 
         {/* Explore more courses */}
         {available.length > 0 && (
-          <section className="space-y-3">
+          <section id="courses" className="space-y-3">
             <h3 className="font-semibold text-gray-800">Explore more courses</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {available.map((s) => (
@@ -384,7 +384,7 @@ function computeNextStep(
   subject: Subject | null | undefined,
 ): { label: string; cta: string; href: string; emoji: string } | null {
   if (modules.length === 0) {
-    return { label: 'Pick a course to begin learning', cta: 'Browse', href: '#', emoji: '🚀' };
+    return { label: 'Pick a course to begin learning', cta: 'Browse', href: '#courses', emoji: '🚀' };
   }
   if (!currentMod) return null;
 
