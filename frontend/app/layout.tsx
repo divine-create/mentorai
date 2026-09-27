@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PostHogProvider from "@/components/PostHogProvider";
+import GoogleProvider from "@/components/GoogleProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,7 +32,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ErrorBoundary>
-          <PostHogProvider>{children}</PostHogProvider>
+          <GoogleProvider>
+            <PostHogProvider>{children}</PostHogProvider>
+          </GoogleProvider>
         </ErrorBoundary>
       </body>
     </html>
