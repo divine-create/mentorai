@@ -94,6 +94,28 @@ export default function OnboardingPage() {
     }
   }
 
+  // If user is already authenticated (e.g. signed in with Google before onboarding),
+  // skip the account step — just sync their data and go to dashboard.
+  async function handlePathContinue(mod: number) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await fetch('/api/auth/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          name: user.user_metadata?.full_name ?? user.user_metadata?.name,
+          goal,
+          experience,
+          startingModule: mod,
+        }),
+      });
+      router.push('/dashboard');
+    } else {
+      setStep('account');
+    }
+  }
+
   async function handleCreateAccount(e: React.FormEvent) {
     e.preventDefault();
     setAuthLoading(true);
@@ -241,10 +263,10 @@ export default function OnboardingPage() {
               ))}
             </div>
             <button
-              onClick={() => setStep('account')}
+              onClick={() => handlePathContinue(startingModule)}
               className="w-full rounded-md bg-indigo-600 px-4 py-3 text-sm font-medium text-white hover:bg-indigo-700"
             >
-              Save my path &amp; create account
+              Save my path &amp; continue
             </button>
           </div>
         )}
