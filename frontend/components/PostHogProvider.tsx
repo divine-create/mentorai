@@ -8,9 +8,8 @@ import posthog from 'posthog-js';
 function PostHogInit() {
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-    if (!key || key === '') {
-      console.warn('PostHog: NEXT_PUBLIC_POSTHOG_KEY not set, analytics disabled');
-      return;
+    if (!key || key === '' || key.startsWith('phc_...') || key === 'phc_placeholder') {
+      return; // PostHog not configured yet
     }
     posthog.init(key, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
