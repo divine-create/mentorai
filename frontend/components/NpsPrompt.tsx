@@ -26,7 +26,7 @@ export default function NpsPrompt({ className = '' }: { className?: string }) {
       try {
         const h = await authHeader();
         if (!h) return;
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/feedback/nps/eligible`, { headers: h });
+        const res = await fetch(`/api/feedback/nps/eligible`, { headers: h });
         const data = await res.json().catch(() => ({}));
         if (active && data?.eligible === true) setEligible(true);
       } catch {
@@ -42,7 +42,7 @@ export default function NpsPrompt({ className = '' }: { className?: string }) {
     try {
       const h = await authHeader();
       if (h) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/feedback/nps`, {
+        await fetch(`/api/feedback/nps`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...h },
           body: JSON.stringify({ score, comment: comment.trim() || undefined }),
@@ -60,7 +60,7 @@ export default function NpsPrompt({ className = '' }: { className?: string }) {
     try {
       const h = await authHeader();
       if (h) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/feedback/nps/dismiss`, {
+        await fetch(`/api/feedback/nps/dismiss`, {
           method: 'POST',
           headers: h,
         });

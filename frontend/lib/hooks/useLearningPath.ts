@@ -15,7 +15,7 @@ export function useLearningPath() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { setLoading(false); return; }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/path`, {
+      const res = await fetch(`/api/path`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 

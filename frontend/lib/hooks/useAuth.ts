@@ -20,7 +20,7 @@ export function useAuth() {
 
       // Sync to backend on sign-in or page refresh with active session
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/sync`, {
+        await fetch(`/api/auth/sync`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

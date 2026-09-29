@@ -49,7 +49,7 @@ export default function ModuleRating({ moduleId, moduleSlug, className = '' }: M
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/feedback/module`, {
+        await fetch(`/api/feedback/module`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
           body: JSON.stringify({
