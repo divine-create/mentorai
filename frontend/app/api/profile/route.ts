@@ -71,7 +71,7 @@ export async function GET() {
         accuracyPct: answered > 0 ? Math.round((correct / answered) * 100) : 0,
         modulesCompleted: Number(stats?.modules_completed ?? 0),
       },
-      recentSessions: recentRows.rows.map((r) => ({
+      recentSessions: recentRows.rows.map((r: any) => ({
         moduleTitle: r.module_title,
         moduleSlug: r.module_slug,
         endedAt: r.ended_at,
