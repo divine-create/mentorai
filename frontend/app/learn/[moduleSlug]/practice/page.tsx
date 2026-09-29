@@ -45,14 +45,14 @@ export default function MathPracticePage() {
     async function init() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { router.push('/auth/login'); return; }
-      const pathRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/path`, {
+      const pathRes = await fetch(`/api/path`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const pathData = await pathRes.json();
       const mod = pathData.modules.find((m: { slug: string; id: number; title: string }) => m.slug === moduleSlug);
       if (!mod) { router.push('/dashboard'); return; }
       setModuleTitle(mod.title);
-      const sessRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tutor/session`, {
+      const sessRes = await fetch(`/api/tutor/session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ moduleId: mod.id }),
@@ -78,7 +78,7 @@ export default function MathPracticePage() {
       closedRef.current = true;
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (!session) return;
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sessions/${sessionId}/close`, {
+        fetch(`/api/sessions/${sessionId}/close`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${session.access_token}` },
         }).catch(() => {});

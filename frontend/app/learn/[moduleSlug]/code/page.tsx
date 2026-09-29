@@ -80,7 +80,7 @@ export default function CodePage() {
       closedRef.current = true;
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (!session) return;
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sessions/${sessionId}/close`, {
+        fetch(`/api/sessions/${sessionId}/close`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${session.access_token}` },
         }).catch(() => {});
@@ -193,7 +193,7 @@ builtins.input = __mentor_input
     async function init() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const pathRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/path`, {
+      const pathRes = await fetch(`/api/path`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const pathData = await pathRes.json();
@@ -203,7 +203,7 @@ builtins.input = __mentor_input
       setModuleId(mod.id);
 
       // Fetch a coding question for this module
-      const questionsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assessments/${mod.id}/questions`, {
+      const questionsRes = await fetch(`/api/assessments/${mod.id}/questions`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const questions = await questionsRes.json();
@@ -212,7 +212,7 @@ builtins.input = __mentor_input
         setQuestion(codingQuestion);
       }
 
-      const sessRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tutor/session`, {
+      const sessRes = await fetch(`/api/tutor/session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ moduleId: mod.id }),
@@ -345,7 +345,7 @@ except BaseException:
     if (!session || !sessionId) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assessments/submit`, {
+      const res = await fetch(`/api/assessments/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({
@@ -382,7 +382,7 @@ except BaseException:
     if (!session || !sessionId) return;
 
     setLoadingFeedback(true);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tutor/code-feedback`, {
+    const res = await fetch(`/api/tutor/code-feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ sessionId, code, output, hasError: !!error, instructions: exercise?.instructions }),
@@ -397,7 +397,7 @@ except BaseException:
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !sessionId) return;
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tutor/hint`, {
+    const res = await fetch(`/api/tutor/hint`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ sessionId, code, hintNumber: hintsUsed + 1, instructions: exercise?.instructions }),
@@ -411,7 +411,7 @@ except BaseException:
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !sessionId) return;
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tutor/solution`, {
+    const res = await fetch(`/api/tutor/solution`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ sessionId, code, instructions: exercise?.instructions }),

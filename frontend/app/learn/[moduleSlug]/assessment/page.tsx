@@ -73,7 +73,7 @@ export default function AssessmentPage() {
       closedRef.current = true;
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (!session) return;
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sessions/${sessionId}/close`, {
+        fetch(`/api/sessions/${sessionId}/close`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${session.access_token}` },
         }).catch(() => {});
@@ -86,7 +86,7 @@ export default function AssessmentPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const pathRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/path`, {
+      const pathRes = await fetch(`/api/path`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const pathData = await pathRes.json();
@@ -95,10 +95,10 @@ export default function AssessmentPage() {
       setModuleId(mod.id);
 
       const [qRes, sessRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assessments/${mod.id}/questions`, {
+        fetch(`/api/assessments/${mod.id}/questions`, {
           headers: { Authorization: `Bearer ${session.access_token}` },
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tutor/session`, {
+        fetch(`/api/tutor/session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
           body: JSON.stringify({ moduleId: mod.id }),
@@ -182,7 +182,7 @@ export default function AssessmentPage() {
     if (!session) return;
 
     setSubmitting(true);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assessments/submit`, {
+    const res = await fetch(`/api/assessments/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ questionId: questions[current].id, answer, sessionId }),
@@ -238,7 +238,7 @@ export default function AssessmentPage() {
 
     setCompleting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assessments/${moduleId}/complete`, {
+      const res = await fetch(`/api/assessments/${moduleId}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       });

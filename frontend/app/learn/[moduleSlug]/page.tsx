@@ -234,7 +234,7 @@ export default function TutorPage() {
     if (!session) return;
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sessions/${sessionId}/close`, {
+      await fetch(`/api/sessions/${sessionId}/close`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
@@ -262,7 +262,7 @@ export default function TutorPage() {
       if (!session) { router.push('/auth/login'); return; }
 
       // Resolve module id from slug
-      const pathRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/path`, {
+      const pathRes = await fetch(`/api/path`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const pathData = await pathRes.json().catch(() => ({}));
@@ -285,7 +285,7 @@ export default function TutorPage() {
       setPracticeKind(pathData.subject?.practice_kind ?? 'code');
 
       // Create (or reuse) session
-      const sessRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tutor/session`, {
+      const sessRes = await fetch(`/api/tutor/session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -307,7 +307,7 @@ export default function TutorPage() {
 
       // Load existing messages (resuming session)
       const msgRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/tutor/session/${sid}/messages`,
+        `/api/tutor/session/${sid}/messages`,
         { headers: { Authorization: `Bearer ${session.access_token}` } }
       );
       const msgs = await msgRes.json();
@@ -342,12 +342,12 @@ export default function TutorPage() {
   // ── Voice setup: build the TTS player, check server availability, tear down ──
   useEffect(() => {
     let cancelled = false;
-    ttsRef.current = new TTSPlayer(process.env.NEXT_PUBLIC_API_URL!, getToken);
+    ttsRef.current = new TTSPlayer('', getToken);
     (async () => {
       try {
         const token = await getToken();
         if (!token) return;
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/voice/status`, {
+        const res = await fetch(`/api/voice/status`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json().catch(() => ({}));
@@ -377,7 +377,7 @@ export default function TutorPage() {
     }
     if (!sttRef.current) {
       sttRef.current = new VoiceInputController(
-        process.env.NEXT_PUBLIC_API_URL!,
+        '',
         getToken,
         (text) => sendRef.current(text),
         (p) => setVoicePhase(p),
@@ -459,7 +459,7 @@ export default function TutorPage() {
     setToken('');
     setError(null);
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tutor/start`, {
+    const res = await fetch(`/api/tutor/start`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -493,7 +493,7 @@ export default function TutorPage() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tutor/feedback`, {
+      await fetch(`/api/tutor/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ sessionId, outcome: correct ? 'correct' : 'wrong', chosen }),
@@ -556,7 +556,7 @@ export default function TutorPage() {
     setToken('');
     setError(null);
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tutor/chat`, {
+    const res = await fetch(`/api/tutor/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify({ sessionId: sid, message: composed, history }),
@@ -607,7 +607,7 @@ export default function TutorPage() {
     setToken('');
     setError(null);
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tutor/chat`, {
+    const res = await fetch(`/api/tutor/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify({ sessionId: sid, message: composed, history }),
@@ -628,7 +628,7 @@ export default function TutorPage() {
     setToken('');
     setError(null);
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tutor/chat`, {
+    const res = await fetch(`/api/tutor/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
