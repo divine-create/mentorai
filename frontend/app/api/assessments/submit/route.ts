@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       [userAuth.id, sessionId ?? null]
     );
     const needsTutor = recentResult.rows.length >= 2 &&
-      recentResult.rows.every((r) => !r.is_correct);
+      recentResult.rows.every((r: any) => !r.is_correct);
 
     return NextResponse.json({ correct: isCorrect, feedback, nextDifficulty, needsTutor });
   } catch (err) {
