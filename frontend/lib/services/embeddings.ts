@@ -75,7 +75,7 @@ export function pgvectorReady(): Promise<boolean> {
   if (!pgvectorReadyPromise) {
     pgvectorReadyPromise = db
       .query(`SELECT 1 FROM information_schema.columns WHERE table_name='book_chunks' AND column_name='embedding_v'`)
-      .then((r) => r.rows.length > 0)
+      .then((r: any) => r.rows.length > 0)
       .catch(() => false);
   }
   return pgvectorReadyPromise;
@@ -95,7 +95,7 @@ export async function retrieveChunks(subjectId: number, query: string, k = 4): P
        LIMIT $3`,
       [subjectId, toVectorLiteral(qVec), k]
     );
-    if (rows.length > 0) return rows.map((r) => ({ ...r, score: Number(r.score) }));
+    if (rows.length > 0) return rows.map((r: any) => ({ ...r, score: Number(r.score) }));
     // else fall through (e.g. rows predate the vector column) to in-process ranking
   }
 
@@ -111,13 +111,13 @@ export async function retrieveChunks(subjectId: number, query: string, k = 4): P
   if (rows.length === 0) return [];
 
   return rows
-    .map((r) => ({
+    .map((r: any) => ({
       id: r.id,
       content: r.content,
       chapter: r.chapter,
       section: r.section,
       score: cosineSim(qVec, r.embedding),
     }))
-    .sort((a, b) => b.score - a.score)
+    .sort((a: any, b: any) => b.score - a.score)
     .slice(0, k);
 }

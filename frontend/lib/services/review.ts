@@ -178,7 +178,7 @@ export async function getDueConcepts(userId: string, limit = 20): Promise<DueCon
      LIMIT $2`,
     [userId, limit]
   );
-  return rows.map((r) => ({
+  return rows.map((r: any) => ({
     conceptId: r.concept_id,
     title: r.title,
     description: r.description,

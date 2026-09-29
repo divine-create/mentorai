@@ -204,7 +204,7 @@ export async function buildCourseFromBook(bookId: number, modelId: string): Prom
         let groundedness: number | null = null;
         try {
           const qVec = await embed(`${q.prompt} ${q.correct_answer ?? ''}`);
-          groundedness = chunkVecs.length ? Math.max(...chunkVecs.map((v) => cosineSim(qVec, v))) : null;
+          groundedness = chunkVecs.length ? Math.max(...chunkVecs.map((v: any) => cosineSim(qVec, v))) : null;
         } catch { /* scoring is best-effort */ }
 
         await db.query(

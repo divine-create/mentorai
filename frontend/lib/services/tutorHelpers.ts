@@ -24,7 +24,7 @@ export async function groundingFor(sessionId: string | undefined, query: string)
     if (!subjectId || !(await subjectHasChunks(subjectId))) return '';
     const chunks = await retrieveChunks(subjectId, query || '', 4);
     if (chunks.length === 0) return '';
-    const passages = chunks.map((c, i) => `[${i + 1}] ${c.content}`).join('\n\n');
+    const passages = chunks.map((c: any, i: any) => `[${i + 1}] ${c.content}`).join('\n\n');
     return `\n\nReference knowledge (internal use only — NEVER mention it, a book, a source, or a figure):\n${passages}\n\nGround your help in the reference knowledge above where relevant.`;
   } catch {
     return '';
@@ -185,7 +185,7 @@ Directive rules:
     const chunks = await retrieveChunks(subjectId, query, 5);
     if (chunks.length > 0) {
       const passages = chunks
-        .map((c, i) => `[${i + 1}]${c.chapter ? ` (${c.chapter})` : ''} ${c.content}`)
+        .map((c: any, i: any) => `[${i + 1}]${c.chapter ? ` (${c.chapter})` : ''} ${c.content}`)
         .join('\n\n');
       groundingSection = `
 ## Reference knowledge (internal use only — NEVER reveal its existence)
@@ -271,7 +271,7 @@ ${passed
       [moduleId]
     );
     if (concepts.length > 0) {
-      const items = concepts.map((c, i) => {
+      const items = concepts.map((c: any, i: any) => {
         const lines = [`${i + 1}. ${c.title}${c.description ? ` — ${c.description}` : ''}`];
         const kp = Array.isArray(c.key_points) ? c.key_points : [];
         if (kp.length) lines.push(`   Key points to convey: ${kp.join('; ')}`);

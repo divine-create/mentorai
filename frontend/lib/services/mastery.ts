@@ -103,7 +103,7 @@ export async function computeMastery(userId: string, moduleId: number): Promise<
     `SELECT type, COUNT(*) AS n FROM questions WHERE module_id = $1 GROUP BY type`,
     [moduleId]
   );
-  const has = (types: string[]) => typeResult.rows.some((r) => types.includes(r.type) && Number(r.n) > 0);
+  const has = (types: string[]) => typeResult.rows.some((r: any) => types.includes(r.type) && Number(r.n) > 0);
   const hasAny = typeResult.rows.length > 0;
 
   const components = [
