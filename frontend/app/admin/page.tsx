@@ -28,7 +28,7 @@ interface Hit { id: number; content: string; chapter: string | null; score: numb
 interface CourseQuestion { id: string; type: string; difficulty: string; prompt: string; options: { label: string; text: string }[] | null; correct_answer: string | null }
 interface CourseModule { id: number; title: string; description: string; questions: CourseQuestion[] }
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+const API = "";
 
 type Tab = 'books' | 'analytics' | 'users' | 'content' | 'settings';
 
@@ -517,3 +517,4 @@ function QuestionEditor({ q, onChanged }: { q: CourseQuestion; onChanged: () => 
     </div>
   );
 }
+

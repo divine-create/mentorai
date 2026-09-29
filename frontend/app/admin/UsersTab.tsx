@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+const API = "";
 const STATUSES = ['free', 'pro', 'annual', 'cancelled'];
 
 interface User {
@@ -88,3 +88,4 @@ export default function UsersTab() {
     </div>
   );
 }
+

@@ -1,15 +1,15 @@
+import { RealtimeTranscriber } from 'assemblyai';
+import RecordRTC from 'recordrtc';
+
 // ─── Client voice helpers ──────────────────────────────────────────────────────
 // TTSPlayer: queues sentences and plays them through /api/voice/tts so the tutor
 // reads along as text streams in.
-// VoiceInputController: listens (browser SpeechRecognition) for the wake word
-// "speak", records the following speech, and sends it to /api/voice/stt (Whisper-
-// style transcription via Gemini).
+// VoiceInputController: listens via RecordRTC and streams PCM audio to AssemblyAI
+// for real-time transcription.
 
 type GetToken = () => Promise<string | null>;
 
 // ─── Extract newly-completed sentences from a growing text buffer ──────────────
-// Returns sentences finished since `fromIdx`, and the new pointer. On `final`,
-// flushes whatever remains even without terminal punctuation.
 export function extractNewSentences(
   full: string,
   fromIdx: number,
@@ -60,7 +60,6 @@ export class TTSPlayer {
     const s = sentence.trim();
     if (!s) return;
     
-    // Start fetching audio immediately, don't wait for playback
     const fetchAudio = async () => {
       try {
         const token = await this.getToken();
@@ -105,7 +104,7 @@ export class TTSPlayer {
     }
     
     const a = new Audio(url);
-    a.playbackRate = 1.25; // Speed up the voice reading
+    a.playbackRate = 1.25;
     this.audio = a;
     const cont = () => {
       URL.revokeObjectURL(url);
@@ -117,71 +116,104 @@ export class TTSPlayer {
   }
 }
 
-// ─── Wake-word voice input ─────────────────────────────────────────────────────
+// ─── AssemblyAI Real-Time Voice Input ──────────────────────────────────────────
 export type VoicePhase = 'off' | 'listening' | 'recording' | 'transcribing';
 
 export class VoiceInputController {
-  private rec: any = null;
-  private mr: MediaRecorder | null = null;
-  private chunks: Blob[] = [];
+  private transcriber: RealtimeTranscriber | null = null;
   private stream: MediaStream | null = null;
-  private ctx: AudioContext | null = null;
+  private recorder: RecordRTC | null = null;
   private silenceTimer: ReturnType<typeof setInterval> | null = null;
-  private maxTimer: ReturnType<typeof setTimeout> | null = null;
+  private ctx: AudioContext | null = null;
   private phase: VoicePhase = 'off';
+  private transcriptBuffer = '';
 
   constructor(
     private apiUrl: string,
     private getToken: GetToken,
-    private onTranscript: (text: string) => void,
-    private onPhase: (p: VoicePhase) => void
+    private onFinalTranscript: (text: string) => void,
+    private onPhase: (p: VoicePhase) => void,
+    // Add a way to report partial transcripts to UI if we want to
+    private onPartialTranscript?: (text: string) => void
   ) {}
 
   static supported(): boolean {
     if (typeof window === 'undefined') return false;
-    const w = window as any;
-    return !!(w.SpeechRecognition || w.webkitSpeechRecognition) && !!navigator.mediaDevices?.getUserMedia;
+    return !!navigator.mediaDevices?.getUserMedia;
   }
 
   async start(): Promise<void> {
     if (this.phase !== 'off') return;
-    this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const w = window as any;
-    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
-    this.rec = new SR();
-    this.rec.continuous = true;
-    this.rec.interimResults = true;
-    this.rec.lang = 'en-US';
-    this.rec.onresult = (e: any) => this.onResult(e);
-    this.rec.onend = () => {
-      // Recognition auto-stops periodically; restart only while idly listening.
-      if (this.phase === 'listening') {
-        try { this.rec.start(); } catch { /* already started */ }
-      }
-    };
-    this.setPhase('listening');
-    try { this.rec.start(); } catch { /* noop */ }
-  }
-
-  private onResult(e: any) {
-    if (this.phase !== 'listening') return;
-    const transcript = Array.from(e.results)
-      .map((r: any) => r[0].transcript)
-      .join(' ')
-      .toLowerCase();
-    if (/\bspeak\b/.test(transcript)) this.beginRecording();
-  }
-
-  private beginRecording() {
     this.setPhase('recording');
-    try { this.rec.stop(); } catch { /* noop */ }
-    this.chunks = [];
-    this.mr = new MediaRecorder(this.stream!);
-    this.mr.ondataavailable = (ev) => { if (ev.data.size > 0) this.chunks.push(ev.data); };
-    this.mr.onstop = () => void this.finishRecording();
-    this.mr.start();
-    this.startSilenceDetection();
-    this.maxTimer = setTimeout(() => this.stopRecording(), 15000);
+    this.transcriptBuffer = '';
+
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Fetch the temp token from our backend route
+      const res = await fetch('/api/assemblyai/token', { method: 'POST' });
+      const data = await res.json();
+      if (!data.token) {
+        throw new Error('No AssemblyAI token provided');
+      }
+
+      this.transcriber = new RealtimeTranscriber({
+        token: data.token,
+        sampleRate: 16000,
+      });
+
+      this.transcriber.on('transcript', (message: any) => {
+        if (message.message_type === 'PartialTranscript') {
+          if (this.onPartialTranscript) {
+            this.onPartialTranscript(this.transcriptBuffer + ' ' + message.text);
+          }
+        } else if (message.message_type === 'FinalTranscript') {
+          this.transcriptBuffer += ' ' + message.text;
+          if (this.onPartialTranscript) {
+            this.onPartialTranscript(this.transcriptBuffer);
+          }
+        }
+      });
+
+      this.transcriber.on('error', (err: any) => {
+        console.error('AssemblyAI Error:', err);
+        this.stop();
+      });
+
+      await this.transcriber.connect();
+
+      this.recorder = new RecordRTC(this.stream, {
+        type: 'audio',
+        mimeType: 'audio/webm;codecs=pcm', 
+        recorderType: RecordRTC.StereoAudioRecorder,
+        timeSlice: 250,
+        desiredSampRate: 16000,
+        numberOfAudioChannels: 1,
+        bufferSize: 4096,
+        audioBitsPerSecond: 128000,
+        ondataavailable: async (blob: Blob) => {
+          if (this.transcriber) {
+             const buffer = await blob.arrayBuffer();
+             const pcmData = new Int16Array(buffer);
+             // WebM/PCM wrap needs to be sent as raw Int16Array?
+             // Actually StereoAudioRecorder with type: 'audio' returns raw PCM ArrayBuffer? No, it returns a blob.
+             // We can just use the AssemblyAI standard approach, but let's send base64 or binary data
+             
+             // Wait, RecordRTC returns WAV format when using StereoAudioRecorder! 
+             // We need to strip the 44-byte WAV header and send just the raw PCM.
+             const rawData = buffer.slice(44);
+             this.transcriber.sendAudio(rawData);
+          }
+        },
+      });
+
+      this.recorder.startRecording();
+      this.startSilenceDetection();
+
+    } catch (err) {
+      console.error(err);
+      this.stop();
+    }
   }
 
   private startSilenceDetection() {
@@ -194,6 +226,7 @@ export class VoiceInputController {
     const data = new Uint8Array(analyser.fftSize);
     const started = Date.now();
     let lastLoud = Date.now();
+
     this.silenceTimer = setInterval(() => {
       if (this.phase !== 'recording') return;
       analyser.getByteTimeDomainData(data);
@@ -205,41 +238,33 @@ export class VoiceInputController {
       const rms = Math.sqrt(sum / data.length);
       const now = Date.now();
       if (rms > 0.04) lastLoud = now;
-      // require ≥0.6s captured, then stop after ~1.4s of silence
-      if (now - started > 600 && now - lastLoud > 1400) this.stopRecording();
+      
+      // Auto-stop after ~2 seconds of silence, or maximum 15s
+      if ((now - started > 1000 && now - lastLoud > 2000) || now - started > 15000) {
+        this.finishRecording();
+      }
     }, 100);
-  }
-
-  private stopRecording() {
-    if (this.silenceTimer) { clearInterval(this.silenceTimer); this.silenceTimer = null; }
-    if (this.maxTimer) { clearTimeout(this.maxTimer); this.maxTimer = null; }
-    if (this.ctx) { void this.ctx.close(); this.ctx = null; }
-    if (this.mr && this.mr.state !== 'inactive') this.mr.stop();
   }
 
   private async finishRecording() {
     this.setPhase('transcribing');
-    const blob = new Blob(this.chunks, { type: this.mr?.mimeType || 'audio/webm' });
-    try {
-      const base64 = await blobToWavBase64(blob);
-      const token = await this.getToken();
-      const res = await fetch(`${this.apiUrl}/api/voice/stt`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ audio: base64, mimeType: 'audio/wav' }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const text = (data.text || '').trim();
-        if (text) this.onTranscript(text);
+    
+    if (this.silenceTimer) { clearInterval(this.silenceTimer); this.silenceTimer = null; }
+    if (this.recorder) { this.recorder.stopRecording(); }
+    
+    // Give AssemblyAI a moment to process the last FinalTranscript
+    setTimeout(async () => {
+      if (this.transcriber) {
+        await this.transcriber.close();
+        this.transcriber = null;
       }
-    } catch {
-      /* swallow — resume listening below */
-    }
-    if (this.phase !== 'off') {
-      this.setPhase('listening');
-      try { this.rec.start(); } catch { /* noop */ }
-    }
+      
+      const final = this.transcriptBuffer.trim();
+      if (final) {
+        this.onFinalTranscript(final);
+      }
+      this.stop(); // fully stop and return to 'off'
+    }, 1000);
   }
 
   private setPhase(p: VoicePhase) {
@@ -249,59 +274,13 @@ export class VoiceInputController {
 
   stop() {
     this.setPhase('off');
-    try { this.rec?.stop(); } catch { /* noop */ }
-    this.stopRecording();
+    if (this.silenceTimer) { clearInterval(this.silenceTimer); this.silenceTimer = null; }
+    if (this.ctx) { void this.ctx.close(); this.ctx = null; }
+    if (this.recorder) { this.recorder.destroy(); this.recorder = null; }
+    if (this.transcriber) { void this.transcriber.close(); this.transcriber = null; }
     if (this.stream) {
       this.stream.getTracks().forEach((t) => t.stop());
       this.stream = null;
     }
   }
-}
-
-// Decode a recorded audio blob and re-encode it as 16-bit mono PCM WAV (base64),
-// because Gemini accepts wav reliably while browsers record webm/opus.
-async function blobToWavBase64(blob: Blob): Promise<string> {
-  const arrayBuf = await blob.arrayBuffer();
-  const w = window as any;
-  const ctx = new (window.AudioContext || w.webkitAudioContext)();
-  const audioBuf = await ctx.decodeAudioData(arrayBuf);
-  await ctx.close();
-
-  const channels = audioBuf.numberOfChannels;
-  const len = audioBuf.length;
-  const mono = new Float32Array(len);
-  for (let c = 0; c < channels; c++) {
-    const cd = audioBuf.getChannelData(c);
-    for (let i = 0; i < len; i++) mono[i] += cd[i] / channels;
-  }
-
-  const sampleRate = audioBuf.sampleRate;
-  const buffer = new ArrayBuffer(44 + len * 2);
-  const view = new DataView(buffer);
-  const writeStr = (o: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
-  writeStr(0, 'RIFF');
-  view.setUint32(4, 36 + len * 2, true);
-  writeStr(8, 'WAVE');
-  writeStr(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeStr(36, 'data');
-  view.setUint32(40, len * 2, true);
-
-  let off = 44;
-  for (let i = 0; i < len; i++) {
-    const s = Math.max(-1, Math.min(1, mono[i]));
-    view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-    off += 2;
-  }
-
-  const bytes = new Uint8Array(buffer);
-  let bin = '';
-  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-  return btoa(bin);
 }

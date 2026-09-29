@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+const API = "";
 
 interface Overview { total_users: number; active_7d: number; total_sessions: number; total_books: number }
 interface SubjectRow { id: number; name: string; icon: string; modules: number; avg_mastery: number; completions: number }
@@ -256,3 +256,4 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
     </div>
   );
 }
+

@@ -5,7 +5,7 @@ import { streamChat } from '@/lib/services/llm';
 import { recordUserMessage, recordAssistantTurn } from '@/lib/services/adaptation';
 import { manageContext, buildSystemPrompt } from '@/lib/services/tutorHelpers';
 
-export const runtime = 'edge';
+
 
 function iteratorToStream(iterator: AsyncGenerator<string>) {
   return new ReadableStream({

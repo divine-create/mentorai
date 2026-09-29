@@ -7,6 +7,7 @@ import { useState } from 'react';
 
 interface GoogleButtonProps {
   redirectTo?: string;
+  label?: string;
 }
 
 export default function GoogleButton({ redirectTo = '/dashboard' }: GoogleButtonProps) {

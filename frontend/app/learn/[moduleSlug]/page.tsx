@@ -380,7 +380,8 @@ export default function TutorPage() {
         process.env.NEXT_PUBLIC_API_URL!,
         getToken,
         (text) => sendRef.current(text),
-        (p) => setVoicePhase(p)
+        (p) => setVoicePhase(p),
+        (partial) => setInput(partial) // Show real-time streaming text in the chat box!
       );
     }
     try {

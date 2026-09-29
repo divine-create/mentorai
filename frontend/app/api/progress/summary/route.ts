@@ -37,7 +37,7 @@ export async function GET() {
     const week = weekResult.rows[0];
     const modules = moduleResult.rows;
 
-    const reviewsDue = 0; // TODO: Implement countDueConcepts
+    const reviewsDue: number = 0; // TODO: Implement countDueConcepts
 
     const lastSession = profile?.last_session_at ? new Date(profile.last_session_at) : null;
     const daysSince = lastSession

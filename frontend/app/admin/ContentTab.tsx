@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+const API = "";
 
 /* ---------- types ---------- */
 
@@ -691,4 +691,5 @@ export default function ContentTab() {
     </div>
   );
 }
+
 

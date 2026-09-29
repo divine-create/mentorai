@@ -22,7 +22,7 @@ export async function middleware(request: NextRequest) {
       url: process.env.UPSTASH_REDIS_REST_URL!,
       token: process.env.UPSTASH_REDIS_REST_TOKEN!,
     });
-    const ip = request.ip ?? '127.0.0.1';
+    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
     let limiter;
 
     if (request.nextUrl.pathname.startsWith('/api/auth')) {

@@ -50,7 +50,7 @@ export default function ReviewPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { router.push('/auth/login'); return; }
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/review/due`, {
+        const res = await fetch(`/api/review/due`, {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
         const data = await res.json().catch(() => ({ concepts: [] }));
@@ -74,7 +74,7 @@ export default function ReviewPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/review/grade`, {
+      const res = await fetch(`/api/review/grade`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({
@@ -212,3 +212,4 @@ export default function ReviewPage() {
     </main>
   );
 }
+

@@ -41,8 +41,8 @@ export default function ProfilePage() {
       if (!session) { router.push('/auth/login'); return; }
       const h = { Authorization: `Bearer ${session.access_token}` };
       const [profRes, ovRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, { headers: h }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subjects/overview`, { headers: h }),
+        fetch(`/api/profile`, { headers: h }),
+        fetch(`/api/subjects/overview`, { headers: h }),
       ]);
       const prof: ProfileData | null = await profRes.json().catch(() => null);
       setData(prof);
@@ -64,7 +64,7 @@ export default function ProfilePage() {
     setSaving(true);
     setSaveError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, {
+      const res = await fetch(`/api/profile`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...h },
         body: JSON.stringify({ name: name.trim(), goal: goal.trim(), experience: experience || undefined }),
@@ -292,3 +292,4 @@ function formatDate(iso: string) {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
+

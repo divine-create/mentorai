@@ -26,7 +26,7 @@ export default function DashboardPage() {
 
   async function loadProjects(token: string) {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects`, {
+      const res = await fetch(`/api/projects`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const d = await res.json();
@@ -43,7 +43,7 @@ export default function DashboardPage() {
       const token = session.access_token;
 
       // Sync user to backend database
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/sync`, {
+      await fetch(`/api/auth/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -54,11 +54,11 @@ export default function DashboardPage() {
 
       const h = { Authorization: `Bearer ${token}` };
       const [pathRes, meRes, subjectsRes, overviewRes, summaryRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/path`, { headers: h }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, { headers: h }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subjects`, { headers: h }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subjects/overview`, { headers: h }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/progress/summary`, { headers: h }),
+        fetch(`/api/path`, { headers: h }),
+        fetch(`/api/auth/me`, { headers: h }),
+        fetch(`/api/subjects`, { headers: h }),
+        fetch(`/api/subjects/overview`, { headers: h }),
+        fetch(`/api/progress/summary`, { headers: h }),
       ]);
 
       setData(await pathRes.json().catch(() => null));
@@ -69,7 +69,7 @@ export default function DashboardPage() {
       setSummary(await summaryRes.json().catch(() => null));
       await loadProjects(token);
       // Admins (env allowlist on the backend) get an Admin nav link.
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/me`, { headers: h })
+      fetch(`/api/admin/me`, { headers: h })
         .then((r) => setIsAdmin(r.ok))
         .catch(() => {});
       setLoading(false);
@@ -86,16 +86,16 @@ export default function DashboardPage() {
 
     setSwitchingSubject(idStr);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subjects/switch`, {
+      const res = await fetch(`/api/subjects/switch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...h },
         body: JSON.stringify({ subjectId: idStr }),
       });
       if (res.ok) {
         const [pathRes, overviewRes, summaryRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/path`, { headers: h }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subjects/overview`, { headers: h }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/progress/summary`, { headers: h }),
+          fetch(`/api/path`, { headers: h }),
+          fetch(`/api/subjects/overview`, { headers: h }),
+          fetch(`/api/progress/summary`, { headers: h }),
         ]);
         setData(await pathRes.json().catch(() => null));
         setOverview(await overviewRes.json().catch(() => []));
@@ -549,3 +549,4 @@ function formatDate(iso: string) {
   if (diff === 1) return 'Yesterday';
   return `${diff} days ago`;
 }
+

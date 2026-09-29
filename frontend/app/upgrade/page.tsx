@@ -34,7 +34,7 @@ export default function UpgradePage() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { router.push('/auth/login'); return; }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/billing/checkout`, {
+    const res = await fetch(`/api/billing/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ plan: planId }),
@@ -88,3 +88,4 @@ export default function UpgradePage() {
     </main>
   );
 }
+
