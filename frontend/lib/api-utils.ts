@@ -15,5 +15,13 @@ export function handleApiError(err: unknown) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   console.error('API Error:', err);
-  return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  // Temporarily expose the error details so we can debug Vercel production
+  return NextResponse.json(
+    { 
+      error: 'Internal server error', 
+      details: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined
+    }, 
+    { status: 500 }
+  );
 }
