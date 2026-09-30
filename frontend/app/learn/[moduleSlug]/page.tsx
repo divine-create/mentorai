@@ -203,7 +203,7 @@ export default function TutorPage() {
 
   // ── Voice (read-aloud TTS + wake-word STT) ───────────────────────────────────
   const [voiceAvailable, setVoiceAvailable] = useState(false);
-  const [readAloud, setReadAloud] = useState(false);
+  const [readAloud, setReadAloud] = useState(true);
   const [voicePhase, setVoicePhase] = useState<VoicePhase>('off');
   const ttsRef = useRef<TTSPlayer | null>(null);
   const sttRef = useRef<VoiceInputController | null>(null);
