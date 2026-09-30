@@ -1,40 +1,27 @@
 import { NextResponse } from 'next/server';
 import { requireAuth, handleApiError } from '@/lib/api-utils';
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
-    // Ensure the user is logged in before granting a token
     await requireAuth();
-
-    const apiKey = process.env.ASSEMBLYAI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'ASSEMBLYAI_API_KEY is missing' },
-        { status: 500 }
-      );
-    }
-
-    // AssemblyAI uses expiresIn (in seconds)
-    const response = await fetch('https://api.assemblyai.com/v2/realtime/token', {
+    
+    // The AssemblyAI temporary token logic. 
+    // In a real app, you would exchange ASSEMBLYAI_API_KEY for a temp token.
+    const res = await fetch('https://api.assemblyai.com/v2/realtime/token', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: apiKey,
+        'Authorization': process.env.ASSEMBLYAI_API_KEY || '',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ expires_in: 3600 }),
+      body: JSON.stringify({ expires_in: 3600 })
     });
-
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('AssemblyAI token error:', err);
-      return NextResponse.json(
-        { error: 'Failed to generate AssemblyAI token' },
-        { status: response.status }
-      );
+    
+    if (!res.ok) {
+      throw new Error('Failed to fetch AssemblyAI token');
     }
-
-    const data = await response.json();
-    return NextResponse.json({ token: data.token });
+    
+    const data = await res.json();
+    return NextResponse.json(data);
   } catch (err) {
     return handleApiError(err);
   }
