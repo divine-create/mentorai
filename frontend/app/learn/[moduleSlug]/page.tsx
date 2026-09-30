@@ -762,10 +762,10 @@ export default function TutorPage() {
               {msg.role === 'assistant' && (
                 <div className="h-7 w-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold mr-2 mt-1 shrink-0">M</div>
               )}
-              <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm ${
+              <div className={`max-w-[85%] rounded-2xl px-5 py-4 text-base shadow-sm ${
                 msg.role === 'user'
                   ? 'bg-indigo-600 text-white rounded-br-sm'
-                  : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
+                  : 'bg-white border border-gray-200 text-gray-900 rounded-bl-sm'
               }`}>
                 {renderContent(text)}
                 {exercise && (
@@ -819,7 +819,7 @@ export default function TutorPage() {
         {streaming && token && (
           <div className="flex justify-start">
             <div className="h-7 w-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold mr-2 mt-1 shrink-0">M</div>
-            <div className="max-w-[75%] rounded-2xl rounded-bl-sm bg-white border border-gray-200 px-4 py-3 text-sm text-gray-800">
+            <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-white border border-gray-200 px-5 py-4 text-base text-gray-900 shadow-sm">
               {renderContent(stripDirectivesForStream(token))}
               <span className="inline-block w-1.5 h-4 bg-indigo-400 animate-pulse ml-0.5 align-middle" />
             </div>

@@ -14,7 +14,7 @@ import 'katex/dist/katex.min.css';
 
 function CodeBlock({ text }: { text: string }) {
   return (
-    <span className="relative my-2 block rounded-md bg-gray-900 font-mono text-xs text-gray-100 overflow-x-auto">
+    <span className="relative my-3 block rounded-lg bg-gray-900 font-mono text-sm text-gray-100 overflow-x-auto shadow-md">
       <button
         onClick={() => navigator.clipboard.writeText(text)}
         className="absolute top-2 right-2 z-10 text-gray-400 hover:text-white text-xs"
@@ -35,24 +35,24 @@ export default function MessageContent({ text }: { text: string }) {
         rehypePlugins={[rehypeKatex]}
         components={{
           p: ({ children }) => <p>{children}</p>,
-          h1: ({ children }) => <p className="mt-1 text-base font-bold">{children}</p>,
-          h2: ({ children }) => <p className="mt-1 text-sm font-bold">{children}</p>,
-          h3: ({ children }) => <p className="mt-1 text-sm font-semibold">{children}</p>,
-          ul: ({ children }) => <ul className="list-disc space-y-1 pl-5">{children}</ul>,
-          ol: ({ children }) => <ol className="list-decimal space-y-1 pl-5">{children}</ol>,
-          li: ({ children }) => <li className="whitespace-normal">{children}</li>,
+          h1: ({ children }) => <p className="mt-1 text-xl font-bold">{children}</p>,
+          h2: ({ children }) => <p className="mt-1 text-lg font-bold">{children}</p>,
+          h3: ({ children }) => <p className="mt-1 text-base font-semibold">{children}</p>,
+          ul: ({ children }) => <ul className="list-disc space-y-1 pl-6">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal space-y-1 pl-6">{children}</ol>,
+          li: ({ children }) => <li className="whitespace-normal leading-relaxed">{children}</li>,
           a: ({ children, href }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline hover:no-underline">
+            <a href={href} target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline hover:no-underline font-medium">
               {children}
             </a>
           ),
-          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+          strong: ({ children }) => <strong className="font-bold">{children}</strong>,
           blockquote: ({ children }) => (
-            <blockquote className="border-l-2 border-gray-300 pl-3 text-gray-600">{children}</blockquote>
+            <blockquote className="border-l-4 border-indigo-300 bg-indigo-50/50 pl-4 py-1 italic text-gray-700">{children}</blockquote>
           ),
           table: ({ children }) => (
             <span className="block overflow-x-auto">
-              <table className="my-1 border-collapse text-xs">{children}</table>
+              <table className="my-2 border-collapse text-sm">{children}</table>
             </span>
           ),
           th: ({ children }) => <th className="border border-gray-300 px-2 py-1 text-left font-semibold">{children}</th>,
@@ -61,7 +61,7 @@ export default function MessageContent({ text }: { text: string }) {
             const isBlock = /language-/.test(className || '');
             const value = String(children).replace(/\n$/, '');
             if (isBlock) return <CodeBlock text={value} />;
-            return <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.85em] text-indigo-700">{children}</code>;
+            return <code className="rounded-md bg-gray-100 px-1.5 py-0.5 font-mono text-[0.9em] text-indigo-700">{children}</code>;
           },
           // The `code` renderer above already wraps block code in its own
           // container, so collapse the surrounding <pre> to avoid double boxes.

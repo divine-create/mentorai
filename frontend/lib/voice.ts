@@ -40,9 +40,8 @@ export function extractNewSentences(
 
 // ─── TTS playback queue ────────────────────────────────────────────────────────
 export class TTSPlayer {
-  private queue: Promise<string | null>[] = [];
+  private queue: string[] = [];
   private playing = false;
-  private audio: HTMLAudioElement | null = null;
   private enabled = false;
 
   constructor(private apiUrl: string, private getToken: GetToken) {}
@@ -60,32 +59,15 @@ export class TTSPlayer {
     const s = sentence.trim();
     if (!s) return;
     
-    const fetchAudio = async () => {
-      try {
-        const token = await this.getToken();
-        const res = await fetch(`${this.apiUrl}/api/voice/tts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ text: s }),
-        });
-        if (!res.ok) return null;
-        const blob = await res.blob();
-        return URL.createObjectURL(blob);
-      } catch {
-        return null;
-      }
-    };
-    
-    this.queue.push(fetchAudio());
+    this.queue.push(s);
     if (!this.playing) void this.playNext();
   }
 
   stop() {
     this.queue = [];
     this.playing = false;
-    if (this.audio) {
-      this.audio.pause();
-      this.audio = null;
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
     }
   }
 
@@ -94,25 +76,32 @@ export class TTSPlayer {
       this.playing = false;
       return;
     }
-    this.playing = true;
     
-    const urlPromise = this.queue.shift()!;
-    const url = await urlPromise;
-    
-    if (!url || !this.enabled) {
-      return void this.playNext();
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      this.playing = false;
+      return;
     }
+
+    this.playing = true;
+    const text = this.queue.shift()!;
     
-    const a = new Audio(url);
-    a.playbackRate = 1.25;
-    this.audio = a;
-    const cont = () => {
-      URL.revokeObjectURL(url);
-      void this.playNext();
-    };
-    a.onended = cont;
-    a.onerror = cont;
-    await a.play().catch(cont);
+    return new Promise((resolve) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0; 
+      
+      utterance.onend = () => {
+        resolve();
+        void this.playNext();
+      };
+      
+      utterance.onerror = (e) => {
+        console.error('Speech synthesis error', e);
+        resolve();
+        void this.playNext();
+      };
+      
+      window.speechSynthesis.speak(utterance);
+    });
   }
 }
 
