@@ -11,15 +11,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing moduleId' }, { status: 400 });
     }
 
-    const subjectResult = await db.query(
-      `SELECT subject_id FROM modules WHERE id = $1`,
-      [moduleId]
-    );
-
     const result = await db.query(
-      `INSERT INTO sessions (user_id, module_id, subject_id)
-       VALUES ($1, $2, $3) RETURNING id`,
-      [userAuth.id, moduleId, subjectResult.rows[0]?.subject_id || null]
+      `INSERT INTO sessions (user_id, module_id)
+       VALUES ($1, $2) RETURNING id`,
+      [userAuth.id, moduleId]
     );
 
     return NextResponse.json({ sessionId: result.rows[0].id });
